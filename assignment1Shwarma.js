@@ -5,11 +5,14 @@ const Shawarma = 5,Pizza = 3,ChickenWings = 4, Large = 3,Medium = 2, Small = 1;
 const OrderState = Object.freeze({
     WELCOMING:   Symbol("welcoming"),
     SELECT: Symbol("select"),
+    ADMIN: Symbol("admin"),
     SIZE:   Symbol("size"),
     TOPPINGS:   Symbol("toppings"),
     DRINKS:  Symbol("drinks"),
     ANYTHING: Symbol("anything")
 });
+
+let OrderList = [];
 
 module.exports = class ShwarmaOrder extends Order{
     constructor(){
@@ -29,9 +32,19 @@ module.exports = class ShwarmaOrder extends Order{
             case OrderState.WELCOMING:
                 this.Total = 1;
                 this.stateCur = OrderState.SELECT;
+                if(sInput.toLowerCase() == "adminportal"){
+                    this.stateCur = OrderState.ADMIN;
+                }
                 aReturn.push("Welcome to Richard's Bistro.");
                 aReturn.push("What would you like to eat?");
                 aReturn.push("1. Shawarma\n2. Pizza\n3. Chicking Wings\nPlease enter the number:\n");
+                break;
+            case OrderState.ADMIN:
+                this.stateCur = OrderState.WELCOMING;
+                aReturn.push("Orders");
+                OrderList.forEach(element => {
+                    aReturn.push(element);
+                });
                 break;
             case OrderState.SELECT:
                 if (sInput=="1")
@@ -51,6 +64,8 @@ module.exports = class ShwarmaOrder extends Order{
                 }
                 else{
                     aReturn.push("Invalid Option");
+                    aReturn.push("1. Shawarma\n2. Pizza\n3. Chicking Wings\nPlease enter the number:\n");
+                    this.stateCur = OrderState.SELECT;
                     this.Total = 0;
                 }
                 this.stateCur = OrderState.SIZE;
@@ -83,7 +98,7 @@ module.exports = class ShwarmaOrder extends Order{
             case OrderState.TOPPINGS:
                 this.stateCur = OrderState.DRINKS;
                 this.sToppings = sInput;
-                aReturn.push("Would you like drinks with that?");
+                aReturn.push("Would you like drinks with that?\n(Enter Soda Name or No)");
                 break;
             case OrderState.DRINKS:
                 if(sInput.toLowerCase() != "no"){
@@ -100,14 +115,19 @@ module.exports = class ShwarmaOrder extends Order{
                     this.sAnythingElse = sInput;
                     this.Total+=5;
                 }
+                var myOrder = "";
                 aReturn.push(`Thank-you for your order of: \n1. ${this.sSize} ${this.sItem} with ${this.sToppings}`);
+                myOrder+=`1.${this.sSize} ${this.sItem} with ${this.sToppings}`;
                 if(this.sDrinks){
-                    aReturn.push("2. "+this.sDrinks);
+                    aReturn.push("2. Soda: "+this.sDrinks);
+                    myOrder+="\n2. Soda: "+this.sDrinks;
                 }
                 if(this.sAnythingElse){
+                    myOrder+="\n3. Extra Items: "+this.sDrinks;
                     aReturn.push("3. "+this.sAnythingElse);
                 }
-                var d = new Date(); 
+                var d = new Date();
+                OrderList.push(myOrder); 
                 d.setMinutes(d.getMinutes() + 20);
                 aReturn.push("Your total amount is $"+this.Total);
                 aReturn.push(`Please pick it up at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
